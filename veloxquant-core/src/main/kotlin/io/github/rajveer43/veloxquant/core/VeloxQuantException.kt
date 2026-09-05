@@ -100,13 +100,16 @@ public sealed class VeloxQuantException(message: String, cause: Throwable? = nul
     /**
      * The `serve` process failed to become ready within the configured timeout (Phase 4).
      *
-     * **Provisional typing note:** [config] is typed `Any` in Phase 1 for the same
-     * cross-module reason documented on [AutopilotWontFit.recommendation] — the real
-     * `ServeConfig` type lives in `veloxquant-runtime`, downstream of `veloxquant-core`. Must
-     * be tightened no later than Phase 4, when this exception is first actually thrown.
+     * **Resolved typing note, replacing Phase 1's `Any` placeholder:** [model]/[port] are a
+     * flattened snapshot of `veloxquant-runtime`'s `ServeConfig`, not a reference to that type
+     * itself, for the same circular-dependency reason documented on
+     * [AutopilotWontFit]'s KDoc — `veloxquant-runtime` depends on `veloxquant-core`, not the
+     * reverse. Only the two fields most useful for diagnosing a timeout are surfaced; the full
+     * `ServeConfig` the caller passed to `VeloxQuantProcess.start` is already in their own
+     * scope, so nothing is lost by not attaching the whole object here.
      */
-    public class ServeStartupTimeout(public val config: Any, public val timeout: Duration) :
-        VeloxQuantException("`veloxquant serve` did not report ready within $timeout")
+    public class ServeStartupTimeout(public val model: String, public val port: Int, public val timeout: Duration) :
+        VeloxQuantException("`veloxquant serve` (model=$model, port=$port) did not report ready within $timeout")
 
     /**
      * The `serve` process exited (`validate_method` failure, crash, etc.) before or during

@@ -112,4 +112,97 @@ class CliShellOutTest {
         assertEquals(true, command.contains("--n-kv-heads"))
         assertEquals(false, command.any { it.contains("n_kv_heads") })
     }
+
+    @Test
+    fun `methods parses a list of compression methods`() {
+        val stdout =
+            """
+            [{"name":"turboquant_rvq","family":"rvq","servable":true,"telemetry_coverage":"FULL"},
+            {"name":"kivi","family":"kivi","servable":true,"telemetry_coverage":"KEYS_ONLY"}]
+            """.trimIndent()
+        val shellOut = CliShellOut(processRunner = { FakeProcess(stdout = stdout) }, pathResolver = { true })
+
+        val methods = shellOut.methods()
+
+        assertEquals(2, methods.size)
+        assertEquals("turboquant_rvq", methods[0].name)
+        assertEquals("KEYS_ONLY", methods[1].telemetryCoverage)
+    }
+
+    @Test
+    fun `profile returns the raw parsed JSON object`() {
+        val stdout = """{"chip":"M3 Max","cores":16}"""
+        val shellOut = CliShellOut(processRunner = { FakeProcess(stdout = stdout) }, pathResolver = { true })
+
+        val profile = shellOut.profile()
+
+        assertEquals("M3 Max", profile.raw["chip"]?.toString()?.trim('"'))
+    }
+
+    @Test
+    fun `precompute uses snake_case flag spelling, not kebab-case`() {
+        var capturedCommand: List<String>? = null
+        val shellOut =
+            CliShellOut(
+                processRunner = {
+                    capturedCommand = it
+                    FakeProcess(stdout = "")
+                },
+                pathResolver = { true },
+            )
+
+        shellOut.precompute(workload)
+
+        val command = requireNotNull(capturedCommand)
+        assertEquals(true, command.contains("--seq_len"))
+        assertEquals(true, command.contains("--head_dim"))
+        assertEquals(false, command.any { it.contains("--seq-len") || it.contains("--head-dim") })
+    }
+
+    @Test
+    fun `precompute throws CliCommandFailed on non-zero exit`() {
+        val shellOut =
+            CliShellOut(
+                processRunner = { FakeProcess(stdout = "", stderr = "disk full", exitCode = 1) },
+                pathResolver = { true },
+            )
+
+        assertThrows(VeloxQuantException.CliCommandFailed::class.java) {
+            shellOut.precompute(workload)
+        }
+    }
+
+    @Test
+    fun `runKvCacheMicrobenchmark parses the plain stdout table's header as columns`() {
+        val stdout =
+            """
+            method  bits  tokens_per_sec  ttft_ms
+            kivi    2     120.5           45.2
+            """.trimIndent()
+        val shellOut = CliShellOut(processRunner = { FakeProcess(stdout = stdout) }, pathResolver = { true })
+
+        val result = shellOut.runKvCacheMicrobenchmark(workload)
+
+        assertEquals(listOf("method", "bits", "tokens_per_sec", "ttft_ms"), result.columns)
+        assertEquals(2, result.rawTableLines.size)
+    }
+
+    @Test
+    fun `runKvCacheMicrobenchmark uses snake_case flag spelling`() {
+        var capturedCommand: List<String>? = null
+        val shellOut =
+            CliShellOut(
+                processRunner = {
+                    capturedCommand = it
+                    FakeProcess(stdout = "header\nrow")
+                },
+                pathResolver = { true },
+            )
+
+        shellOut.runKvCacheMicrobenchmark(workload)
+
+        val command = requireNotNull(capturedCommand)
+        assertEquals(true, command.contains("--batch_size"))
+        assertEquals(false, command.any { it.contains("--batch-size") })
+    }
 }
