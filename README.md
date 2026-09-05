@@ -4,8 +4,43 @@ Kotlin/JVM SDK for [VeloxQuant](https://github.com/rajveer43/veloxquant-mlx) —
 Apple-Silicon-only MLX KV-cache compression engine. Sibling to the TypeScript, Go, and Rust
 client SDKs.
 
-**Status: pre-alpha, under active phased construction.** Not yet published to Maven Central.
-See `CHANGELOG.md` for what's landed so far.
+**Status: pre-alpha, under active phased construction.** Published via [JitPack](https://jitpack.io/)
+today; not yet on Maven Central. See `CHANGELOG.md` for what's landed so far.
+
+## Installation
+
+Add the JitPack repository, then depend on individual modules by tag:
+
+```kotlin
+// settings.gradle.kts
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url = uri("https://jitpack.io") }
+    }
+}
+```
+
+```kotlin
+// app/build.gradle.kts
+dependencies {
+    implementation("com.github.rajveer43.veloxquant-kotlin:veloxquant-core:v0.1.0-alpha")
+    implementation("com.github.rajveer43.veloxquant-kotlin:veloxquant-memory:v0.1.0-alpha")
+    // add other modules (veloxquant-java, veloxquant-optimize, veloxquant-runtime,
+    // veloxquant-system, veloxquant-monitor) the same way, as needed.
+}
+```
+
+Replace `v0.1.0-alpha` with any tag, branch name, or commit hash from this repo — JitPack
+builds it on first request (the first resolve after a new tag takes a minute or two while
+JitPack builds; subsequent resolves are cached). Check build status for a given tag at
+`https://jitpack.io/#rajveer43/veloxquant-kotlin`.
+
+Android consumers should only add `veloxquant-core`/`veloxquant-java`/`veloxquant-memory`/
+`veloxquant-optimize` (Android-safe modules — see the table below); `veloxquant-runtime` and
+`veloxquant-system` are JVM-desktop only and will fail to resolve meaningfully on Android
+even though JitPack will happily build them.
 
 ## Modules
 
