@@ -14,3 +14,7 @@ prompt's "final note on flagged judgment calls").
   workflow skeletons.
 - Phase 0: `veloxquant-bom`, `veloxquant-system`'s `SystemInfo.detect()` hardware
   detection, Android/JVM-desktop module boundary proof.
+- Phase 1: `VeloxQuantClient` with `chat()`/`chatStream()`, the full
+  `VeloxQuantException` sealed error hierarchy, 404-dispatch logic
+  (GenerationFailed/UnexpectedRoute/MalformedErrorResponse), and
+  `veloxquant-java`'s `chatAsync()`/`streamBlocking()` Java interop.
