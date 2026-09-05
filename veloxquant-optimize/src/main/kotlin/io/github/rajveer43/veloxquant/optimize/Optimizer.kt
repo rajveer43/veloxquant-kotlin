@@ -42,6 +42,47 @@ public enum class OptimizationGoal {
     CONSTANT_MEMORY,
 }
 
+/** A `veloxquant recommend --goal` request, mirroring the CLI's own flags (investigation §2.1). */
+public data class RecommendRequest(
+    val workload: WorkloadSpec,
+    val goal: OptimizationGoal,
+)
+
+/**
+ * The seam [Optimizer.recommend] shells out through, owned by this module rather than
+ * `veloxquant-runtime` itself.
+ *
+ * **Deviation from plan §2's module diagram, flagged explicitly:** the plan describes
+ * `veloxquant-optimize`'s CLI shell-out path as "gated behind an injected optional
+ * dependency so Android builds simply never wire it in" — this interface is that injected
+ * seam. `veloxquant-optimize` takes **zero Gradle dependency** on `veloxquant-runtime`
+ * (mirrors `veloxquant-monitor`'s identical "no dependency at the Gradle level" pattern for
+ * its own optional process-RSS hook); `veloxquant-runtime`'s `CliShellOut` implements this
+ * interface and is wired in only by JVM-desktop callers (e.g. `AutoPilot`, which lives in
+ * `veloxquant-runtime` for exactly this reason — see that module's KDoc). Without this
+ * seam, [Optimizer.recommend] living in the same module as the Android-safe
+ * [Optimizer.recommendOffline] would force `veloxquant-optimize` to depend on the
+ * JVM-desktop-only `veloxquant-runtime`, breaking the Android-safe Gradle-level
+ * classification this module's own `build.gradle.kts` comment documents.
+ */
+public fun interface RecommendBackend {
+    /** Shells out for a recommendation matching [workload]/[goal]. */
+    public fun recommend(workload: WorkloadSpec, goal: OptimizationGoal): RecommendationCliResult
+}
+
+/** The subset of `recommend --json`'s payload [Optimizer.recommend] needs from a [RecommendBackend]. */
+public data class RecommendationCliResult(
+    val method: String,
+    val bits: Int,
+    val knobs: Map<String, String>,
+    val keyAccountingRatio: Double,
+    val residentSavingsLikely: Boolean,
+    val kvFp16Bytes: Long,
+    val kvCompressedEstimateBytes: Long,
+    val warnings: List<String>,
+    val rationale: String,
+)
+
 /**
  * A compression method + configuration recommendation. [isOfflineEstimate] distinguishes
  * [Optimizer.recommendOffline]'s pure-computation output (`true`) from the real,
@@ -128,6 +169,32 @@ public object Optimizer {
                 "Offline estimate for goal $goal: selected $method at $bits bits based on a static " +
                     "bit-width table, not the live server's ruleset.",
             isOfflineEstimate = true,
+        )
+    }
+
+    /**
+     * CLI-backed recommendation, the source of truth deferred from Phase 2 (plan §3.5) — shells
+     * to `veloxquant recommend --json` through [backend] rather than this module's own static
+     * bit-width table. `isOfflineEstimate = false` distinguishes this path from
+     * [recommendOffline]'s approximation; a caller must never be left unable to tell which
+     * produced a given [Recommendation].
+     *
+     * JVM-desktop only in practice — [backend] is only ever supplied by a JVM-desktop caller
+     * (e.g. `veloxquant-runtime`'s `AutoPilot`), never Android, per [RecommendBackend]'s KDoc.
+     */
+    public fun recommend(request: RecommendRequest, backend: RecommendBackend): Recommendation {
+        val result = backend.recommend(request.workload, request.goal)
+        return Recommendation(
+            method = result.method,
+            bits = result.bits,
+            knobs = result.knobs,
+            keyAccountingRatio = result.keyAccountingRatio,
+            residentSavingsLikely = result.residentSavingsLikely,
+            kvFp16Bytes = result.kvFp16Bytes,
+            kvCompressedEstimateBytes = result.kvCompressedEstimateBytes,
+            warnings = result.warnings,
+            rationale = result.rationale,
+            isOfflineEstimate = false,
         )
     }
 }

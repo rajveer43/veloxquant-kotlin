@@ -11,13 +11,13 @@ See `CHANGELOG.md` for what's landed so far.
 
 | Module | Android-safe? | Purpose | Status |
 |---|---|---|---|
-| `veloxquant-core` | Yes | Chat/streaming HTTP client, error model, structured output, embeddings, conversations | Chat + streaming + error model shipped (Phase 1). Structured output/embeddings pending (Phase 5). |
+| `veloxquant-core` | Yes | Chat/streaming HTTP client, error model, structured output, embeddings, conversations | Chat + streaming + error model shipped (Phase 1). `Conversation` shipped (Phase 3). Structured output/embeddings pending (Phase 5). |
 | `veloxquant-java` | Yes | `.future()`/callback-based Java interop wrappers | `chatAsync()`/`streamBlocking()` shipped (Phase 1). |
 | `veloxquant-memory` | Yes | Pure-computation KV-cache memory estimation | `MemoryEstimator.estimate()` shipped (Phase 2). |
-| `veloxquant-optimize` | Yes* | Offline + CLI-backed recommend/AutoPilot fit-checks | `recommendOffline()` shipped (Phase 2). CLI-backed `recommend()`/AutoPilot pending (Phase 3). |
+| `veloxquant-optimize` | Yes* | Offline + CLI-backed recommend/AutoPilot fit-checks | `recommendOffline()` (Phase 2) and CLI-backed `recommend()` (Phase 3, via an injected `RecommendBackend`) shipped. |
 | `veloxquant-monitor` | Yes* | Per-request metrics + optional process-RSS sampling | Pending (Phase 6). |
 | `veloxquant-system` | No (JVM-desktop only) | Local hardware detection via `sysctl`/`vm_stat` | `SystemInfo.detect()` shipped (Phase 0). |
-| `veloxquant-runtime` | No (JVM-desktop only) | `veloxquant` CLI process lifecycle + shell-outs | Pending (Phase 3/4). |
+| `veloxquant-runtime` | No (JVM-desktop only) | `veloxquant` CLI process lifecycle + shell-outs + AutoPilot | `recommend`/`auto-config` shell-outs and `AutoPilot` shipped (Phase 3). `serve` process lifecycle pending (Phase 4). |
 | `veloxquant-bom` | — | Version-alignment BOM | Shipped (Phase 0). |
 
 \* Android-safe at the Gradle level; features requiring `veloxquant-runtime` are simply not

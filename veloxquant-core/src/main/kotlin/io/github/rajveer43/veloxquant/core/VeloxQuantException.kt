@@ -42,21 +42,25 @@ public sealed class VeloxQuantException(message: String, cause: Throwable? = nul
 
     /**
      * AutoPilot determined the requested workload won't fit — see plan §3.6 (Phase 3). Carries
-     * the same warnings/recommendation payload as
-     * `io.github.rajveer43.veloxquant.optimize.AutopilotFitError` and must never drift from it
-     * in the fields it carries.
+     * the same payload fields as
+     * `io.github.rajveer43.veloxquant.optimize.AutopilotFitError` and must never drift from it.
      *
-     * **Provisional typing note:** [recommendation] is typed `Any` in Phase 1 only because the
-     * real `Recommendation` type lives in `veloxquant-optimize`, which depends on
-     * `veloxquant-core` (not the reverse) — `veloxquant-core` cannot reference it without an
-     * illegal circular module dependency. This must be tightened to a real shared type (either
-     * by moving `Recommendation` into `veloxquant-core` or introducing a small shared-types
-     * module) no later than Phase 3, when `AutopilotWontFit` is first actually thrown — flag
-     * this to the maintainer if Phase 3 arrives and this is still `Any`.
+     * **Resolved typing note, replacing Phase 1's `Any` placeholder:** [recommendation] is a
+     * flattened snapshot of `veloxquant-optimize`'s `Recommendation` fields, not a reference to
+     * that type itself. `veloxquant-optimize` depends on `veloxquant-core` (not the reverse);
+     * referencing `Recommendation` directly here would create an illegal circular module
+     * dependency the moment `AutoPilot` (which lives in `veloxquant-optimize`, wired to
+     * `veloxquant-runtime`) throws this exception. Every field on
+     * [io.github.rajveer43.veloxquant.optimize.AutopilotFitError] is mirrored 1:1 here by name;
+     * `veloxquant-optimize`'s `OptimizerTest`/`AutoPilotTest` cross-check that the two never
+     * drift apart in field set, since Kotlin's type system cannot enforce that across the
+     * dependency direction.
      */
     public class AutopilotWontFit(
         public val warnings: List<String>,
-        public val recommendation: Any,
+        public val method: String,
+        public val bits: Int,
+        public val rationale: String,
     ) : VeloxQuantException("AutoPilot: workload likely will not fit (${warnings.joinToString("; ")})")
 
     /** `veloxquant-runtime` tried to shell out but the `veloxquant` binary isn't on PATH. */
@@ -64,6 +68,14 @@ public sealed class VeloxQuantException(message: String, cause: Throwable? = nul
         VeloxQuantException(
             "`veloxquant` CLI not found (tried: $attemptedCommand). Install the VeloxQuant Python package.",
         )
+
+    /**
+     * A one-shot `veloxquant` CLI subcommand (`recommend`, `auto-config`, etc.) exited non-zero
+     * (Phase 3). Distinct from [ServeProcessExited], which covers the long-running `serve`
+     * process instead.
+     */
+    public class CliCommandFailed(public val command: String, public val exitCode: Int, public val stderr: String) :
+        VeloxQuantException("`$command` exited with code $exitCode: $stderr")
 
     /**
      * A desktop-only API (process management, hardware detection) was called on Android or

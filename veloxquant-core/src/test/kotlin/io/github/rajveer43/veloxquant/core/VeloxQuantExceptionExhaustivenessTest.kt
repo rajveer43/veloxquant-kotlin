@@ -18,6 +18,7 @@ class VeloxQuantExceptionExhaustivenessTest {
             is VeloxQuantException.MalformedErrorResponse -> "MalformedErrorResponse"
             is VeloxQuantException.AutopilotWontFit -> "AutopilotWontFit"
             is VeloxQuantException.CliNotInstalled -> "CliNotInstalled"
+            is VeloxQuantException.CliCommandFailed -> "CliCommandFailed"
             is VeloxQuantException.UnsupportedPlatform -> "UnsupportedPlatform"
             is VeloxQuantException.MalformedStructuredOutput -> "MalformedStructuredOutput"
             is VeloxQuantException.ServeStartupTimeout -> "ServeStartupTimeout"

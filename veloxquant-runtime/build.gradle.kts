@@ -18,12 +18,16 @@ kotlin {
 
 dependencies {
     implementation(project(":veloxquant-core"))
+    implementation(project(":veloxquant-optimize"))
+    implementation(project(":veloxquant-memory"))
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.jdk8)
     implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.ktor.client.mock)
 }
 
 tasks.test {

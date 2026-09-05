@@ -62,4 +62,29 @@ class OptimizerTest {
             assertTrue(recommendation.bits > 0)
         }
     }
+
+    @Test
+    fun `recommend delegates to the injected backend and marks isOfflineEstimate false`() {
+        val backend =
+            RecommendBackend { _, _ ->
+                RecommendationCliResult(
+                    method = "turboquant_rvq",
+                    bits = 4,
+                    knobs = emptyMap(),
+                    keyAccountingRatio = 0.25,
+                    residentSavingsLikely = true,
+                    kvFp16Bytes = 1_000L,
+                    kvCompressedEstimateBytes = 250L,
+                    warnings = emptyList(),
+                    rationale = "server-backed pick",
+                )
+            }
+
+        val recommendation =
+            Optimizer.recommend(RecommendRequest(workload, OptimizationGoal.EVERYDAY), backend)
+
+        assertFalse(recommendation.isOfflineEstimate)
+        assertEquals("turboquant_rvq", recommendation.method)
+        assertEquals("server-backed pick", recommendation.rationale)
+    }
 }
