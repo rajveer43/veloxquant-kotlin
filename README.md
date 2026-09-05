@@ -9,16 +9,16 @@ See `CHANGELOG.md` for what's landed so far.
 
 ## Modules
 
-| Module | Android-safe? | Purpose |
-|---|---|---|
-| `veloxquant-core` | Yes | Chat/streaming HTTP client, error model, structured output, embeddings, conversations |
-| `veloxquant-java` | Yes | `.future()`/callback-based Java interop wrappers |
-| `veloxquant-memory` | Yes | Pure-computation KV-cache memory estimation |
-| `veloxquant-optimize` | Yes* | Offline + CLI-backed recommend/AutoPilot fit-checks |
-| `veloxquant-monitor` | Yes* | Per-request metrics + optional process-RSS sampling |
-| `veloxquant-system` | No (JVM-desktop only) | Local hardware detection via `sysctl`/`vm_stat` |
-| `veloxquant-runtime` | No (JVM-desktop only) | `veloxquant` CLI process lifecycle + shell-outs |
-| `veloxquant-bom` | — | Version-alignment BOM |
+| Module | Android-safe? | Purpose | Status |
+|---|---|---|---|
+| `veloxquant-core` | Yes | Chat/streaming HTTP client, error model, structured output, embeddings, conversations | Chat + streaming + error model shipped (Phase 1). Structured output/embeddings pending (Phase 5). |
+| `veloxquant-java` | Yes | `.future()`/callback-based Java interop wrappers | `chatAsync()`/`streamBlocking()` shipped (Phase 1). |
+| `veloxquant-memory` | Yes | Pure-computation KV-cache memory estimation | `MemoryEstimator.estimate()` shipped (Phase 2). |
+| `veloxquant-optimize` | Yes* | Offline + CLI-backed recommend/AutoPilot fit-checks | `recommendOffline()` shipped (Phase 2). CLI-backed `recommend()`/AutoPilot pending (Phase 3). |
+| `veloxquant-monitor` | Yes* | Per-request metrics + optional process-RSS sampling | Pending (Phase 6). |
+| `veloxquant-system` | No (JVM-desktop only) | Local hardware detection via `sysctl`/`vm_stat` | `SystemInfo.detect()` shipped (Phase 0). |
+| `veloxquant-runtime` | No (JVM-desktop only) | `veloxquant` CLI process lifecycle + shell-outs | Pending (Phase 3/4). |
+| `veloxquant-bom` | — | Version-alignment BOM | Shipped (Phase 0). |
 
 \* Android-safe at the Gradle level; features requiring `veloxquant-runtime` are simply not
 wired in on Android builds.
